@@ -46,11 +46,13 @@ public class Receiver {
 	dec() from sender
 	*/
 
+	//base^expnt mod bigP
 	public BigInteger pow(BigInteger base, BigInteger expnt) {
 		BigInteger res = base.modPow(expnt, bigP);
 		return res;
 	}
 
+	//generate random group element C
 	public void generateC () {
 		BigInteger[] res = new BigInteger[k];
 		for (int i=0; i<k; i++) {
@@ -59,6 +61,8 @@ public class Receiver {
 		this.c = res;
 	}
 
+
+	//generate pairs of [r0, r1] and compute [g^r0, g^r1] to encrypt messages in 1 of 2 OT
 	public void geneBigRPairs() {
 		BigInteger[][] rs = new BigInteger[k][2];
 		BigInteger[][] rsIG = new BigInteger[k][2];
@@ -72,6 +76,7 @@ public class Receiver {
 		this.rkeysInGroup = rsIG;
 	}
 
+	//encrypt the random matrix Q 
 	public void encryptMatrix() {
 		try {
 			String[][] txt = new String[k][2];
@@ -179,7 +184,8 @@ public class Receiver {
         	ObjectInputStream in = new ObjectInputStream(client.getInputStream());
 
         	//test case initiation
-        	Receiver bob = new Receiver(new int[] {0, 1, 1, 0, 1, 0}, 10);
+        	Receiver bob = new Receiver(new int[] {0, 1, 1, 0, 1, 0, 0}, 5);
+        	System.out.println("The protocol extends k = " + bob.k + " OTs to m = " + bob.choices.length + " OTs \n" );
         	System.out.println("Receiver\'s choices are: ");
         	System.out.println(Arrays.toString(bob.choices) + "\n");
         	//generate m by k random matrix

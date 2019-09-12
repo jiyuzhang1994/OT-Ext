@@ -58,11 +58,13 @@ public class Sender {
 	encryptMatrix() from sender
 	*/
 
+	//base^expnt mod bigP
 	public BigInteger pow(BigInteger base, BigInteger expnt) {
 		BigInteger res = base.modPow(expnt, bigP);
 		return res;
 	}
 
+	//generate random k used to compute key
 	public BigInteger[] geneK() {
 		BigInteger[] theK = new BigInteger[k];
 		for (int i=0; i<k; i++) {
@@ -71,6 +73,7 @@ public class Sender {
 		return theK;
 	}
 
+	//generate public keys [PK_0, PK_1]
 	public void genePK() {
 		bigK = this.geneK();
 		BigInteger[][] keys = new BigInteger[k][2];
@@ -86,6 +89,7 @@ public class Sender {
 		pkeys = keys;
 	}
 
+	//decrypt the random matrix Q received from bob.
 	public void decryptMatrix() {
 		try {
 			int[][] res = new int[this.msgs.length][k];
@@ -199,20 +203,22 @@ public class Sender {
 				ObjectInputStream in = new ObjectInputStream(server.getInputStream());
 				ObjectOutputStream out = new ObjectOutputStream(server.getOutputStream());
 
-
 				//test case initialization; messages must be pairs of strings of length 20;
-				String[][] sInput = new String[6][2];
+				String[][] sInput = new String[7][2];
 				sInput[0] = new String[] {"Angel012345678901234", "Devil012345678901234"}; 
 				sInput[1] = new String[] {"Dog01234567890123456", "Cat01234567890123456"}; 
 				sInput[2] = new String[] {"Apple012345678901234", "Banana01234567890123"}; 
 				sInput[3] = new String[] {"Red01234567890123456", "Blue0123456789012345"}; 
 				sInput[4] = new String[] {"Pizza012345678901234", "HotDog01234567890123"};
 				sInput[5] = new String[] {"Coke0123456789012345", "Spirit01234567890123"};
+				sInput[6] = new String[] {"IcedLatte01234567891", "Mocha012345678912345"};
+
+				Sender alice = new Sender(sInput, 5);
+				System.out.println("The protocol extends k = " + alice.k + " OTs to m = " + alice.msgs.length + " OTs \n" );
 				System.out.println("Sender\'s input includes: ");
 				for (int i=0; i<sInput.length; i++) {
 					System.out.println(Arrays.toString(sInput[i]));
 				}
-				Sender alice = new Sender(sInput, 10);
 
 				//generate random oracle;
 				alice.geneOracle();

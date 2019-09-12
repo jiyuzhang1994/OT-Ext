@@ -22,7 +22,7 @@
 
 
 ## <a name="shuru"></a>输入及限制
-发送者的输入首先为 $m$ 对消息，每一对消息由两个长度为**20**的字符串组成，这个输入由 String[m][2] 格式表示。 另外还有一个为安全参数的 int $k$ 作为输入。所以，发送者的输入为：
+发送者的输入首先为 $m\ (m<=20)$ 对消息，每一对消息由两个长度为**20**的字符串组成，这个输入由 String[m][2] 格式表示。 另外还有一个为安全参数的 int $k$ 作为输入。所以，发送者的输入为：
 
 String[m][2] sInput
 
@@ -46,8 +46,8 @@ int k
 ## <a name="ceshi"></a> 如何测试代码
 ### 运行
 1. 编译 Sender.java 和 Receiver.java
-2. 运行 Sender.class 
-3. 运行 Reciever.class
+2. 在一个 terminal 运行 Sender.class 
+3. 打开另一个 terminal， 运行 Reciever.class
 
 ### 改动输入
 
@@ -87,19 +87,15 @@ Receiver bob = new Receiver(new int[] {0, 1, 1, 0, 1, 0}, 10);
 ## <a name="anquan"></a>安全性
 **理论**
 
-1 of 2协议的理论安全性基于 Deffie-Hellman 假设， 简单地说， 给予一个DH群里的元素， 它的discrete log 很难被计算出。 因此， 接收者在最后一步解密信息时只能解密出自己生成的k的那个消息， 而另一个 $c/(g^k)$ 的discrete log不能被计算出， 所以无法解密。
+1 of 2协议的理论安全性基于 Deffie-Hellman 假设， 简单地说， 随机独立生成DH群里的元素 $g^a$ 和 $g^b$， $g^{ab}$ 在计算上是随机的。 也就是说 $(g^a, g^b, g^{ab})$ 和 $(g^a , g^b, g^c)$ 这两个三元随机分布是计算上无法区分的(*computationally indistinguishable*) 。 （在这里 $g^c$ 为独立生成的元素）因此， 接收者在最后一步解密信息时只能解密出自己生成的k的那个消息 (用 $(g^{r_\delta})^k$ )。   而另一个 $(g^{r_{1-\delta}})^{k^\prime}$ 看上去是随机的（在知道 $g^{k^\prime} $和$g^{r_{1-\delta}}$的情况下）， 所以无法解密。
 
 而派生协议的安全性由[IKNP3]的论述可得
 
 **实现**
 
-在我们的实现中，以下几方面需注意：
+1. 在生成随机数的过程中我们假设分布是完美随机（uniformly random)的， 而在java里生成的并非完美随机，生成的数可能服从一定bias的概率分布
 
-1. 所使用的Hash Function 为 "SHA-1" ，根据维基百科显示已有非暴力搜索（brute-force)的方式找到碰撞的方法。
-  * 碰撞，  在1 of 2协议里，半诚实的发送者找到碰撞并不能帮助他计算出接收者的选择信息
-  * 逆（Invert）， 在 1 of 2 协议里， 找到hash value的逆不能帮助接收者计算出密钥的值，因为这个假设基于 DH hardness assumption； 而在派生实现中， 若接收者可以算出H的逆， 则能得到 $q_j$ 和 $q_j \oplus s$， XOR 这两个值可以得到发送者的 $s$ 值， 这样可以破解 $(k, m)$-OT
-
-2. 在生成随机数的过程中我们假设是完美随机的， 而在java里生成的并非完美随机（uniformly random)，生成的数可能服从一定bias的概率分布
+2. 另外我们使用hash function "SHA-1" 作为 random oracle 来生成 理想中完全随机的01串， 进而实现 one-time pad， 而实际上hash function 并不是 random function
 
 ## <a name="gaijin"></a>改进
 
@@ -146,8 +142,8 @@ Restrictions:
 
 ###Run 
 1. Compile Sender.java and Receiver.java 
-2. Run Sender.class
-3. Run Receiver.class
+2. Run Sender.class in one terminal.
+3. Open another temrminal. Run Receiver.class
 
 ###Modify Sender Input
 
@@ -191,18 +187,13 @@ In 1 out of 2 OT protocol:
 
 **In Theory**
 
-* The 1 out of 2 protocol is secure due to the DH assumption. In particular, the receiver is assumed to be infeasible the find the discrete log of $c/(g^k)$.
+* The 1 out of 2 protocol is secure due to the DDH assumption. In particular, the receiver can only know $(g^{r_\delta})^k$, while $(g^{r_{1-\delta}})^{k^\prime}$ maintains computationally random to him, given $g^{k^\prime} $ and $g^{r_{1-\delta}}$.
 * The security of the extension follows from the argument in [IKNP03]
 
-**In Implementation**
 
-1. Hash Function SHA-1
-  * We used SHA-1 as our random oracle in the implementation. Two attack must be analyzed:
-  * Collision. It seems that finding collision doesn't give the semi-honest Sender ability to compute additional information.
-  * Inversion. In 1 of 2 OT, inverting SHA-1 doesn't help the receiver compute additional information since that bases on the DH assumption. However, in the extension protocol, if receivers are able to compute the inverse. Then he is able to compute $q_j$ and $q_j \oplus s$, xor which can give him $s$, which successfully attack the $(k, m)$-OT.
 
 ##<a name="future"></a>Future Improvement / Discussion
 
 Our implementation works for message strings of length 20, and message pairs is restricted to at most 20. This is because the hash output of "SHA-1" is restricted to 20 bytes and we are XORing strings and hashes(used as keys) byte by byte.
 
-However, we argue that this can be improved to work for arbitrary number of pairs of strings and arbitrary length of messages. This can be done by chop the messages into blocks of length 20 (because .getByte() method only returns the byte array for the first 20 characters) and XOR them with hashed values block by block.  Notice that for different block different hash value must be used (i.e. need to hash different keys). Else this violates security of one-time pad : $t_0 \oplus h \oplus t_1 \oplus h = t_0 \oplus t_1$ .
+However, we argue that this can be improved to work for arbitrary number of pairs of strings and arbitrary length of messages. This can be done by chop the messages into blocks of length 20 (because .getByte() method only returns the byte array for the first 20 characters) and XOR them with hashed values block by block.  Note that for different block of strings different hash value must be used (i.e. need to hash different keys). Else this violates security of one-time pad : $t_0 \oplus h \oplus t_1 \oplus h = t_0 \oplus t_1$ .
